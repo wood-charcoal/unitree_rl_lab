@@ -220,7 +220,7 @@ class ObservationsCfg:
         velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
         joint_pos_rel = ObsTerm(func=mdp.joint_pos_rel)
         joint_vel_rel = ObsTerm(func=mdp.joint_vel_rel, scale=0.05)
-        joint_effort = ObsTerm(func=mdp.joint_effort, scale=0.01)
+        # joint_effort = ObsTerm(func=mdp.joint_effort, scale=0.01)
         last_action = ObsTerm(func=mdp.last_action)
         gait_phase = ObsTerm(func=mdp.gait_phase, params={"period": 0.6})
         # height_scanner = ObsTerm(func=mdp.height_scan,
