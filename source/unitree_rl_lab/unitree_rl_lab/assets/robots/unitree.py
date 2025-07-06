@@ -23,7 +23,7 @@ class UnitreeArticulationCfg(ArticulationCfg):
     joint_sdk_names: list[str] = None
 
 
-UNITREE_MODEL_DIR = "/home/ubuntu/projects/unitree_model"  # MISSING
+UNITREE_MODEL_DIR = "/home/ubuntu/projects/robot_model"  # MISSING
 
 UNITREE_GO2_CFG = UnitreeArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
@@ -261,6 +261,117 @@ UNITREE_H1_CFG = UnitreeArticulationCfg(
         "left_elbow_joint",
     ],
 )
+
+BOSTONDYNAMIC_ATLAS4_CFG = UnitreeArticulationCfg(
+    spawn=sim_utils.UsdFileCfg(
+        usd_path=f"{UNITREE_MODEL_DIR}/Atlas4/usd/atlas_v4_with_multisense.usd",
+        activate_contact_sensors=True,
+        rigid_props=sim_utils.RigidBodyPropertiesCfg(
+            disable_gravity=False,
+            retain_accelerations=False,
+            linear_damping=0.0,
+            angular_damping=0.0,
+            max_linear_velocity=1000.0,
+            max_angular_velocity=1000.0,
+            max_depenetration_velocity=1.0,
+        ),
+        articulation_props=sim_utils.ArticulationRootPropertiesCfg(
+            enabled_self_collisions=False,
+            solver_position_iteration_count=4,
+            solver_velocity_iteration_count=4,
+        ),
+    ),
+    init_state=ArticulationCfg.InitialStateCfg(
+        pos=(0.0, 0.0, 1.2),
+        joint_pos={
+            ".*leg_hpy": -0.1,
+            ".*leg_kny": 0.6,
+            ".*leg_akx": -0.2,
+            ".*arm_shz": 0.1,
+            ".*arm_elx": -0.2,
+        },
+        joint_vel={".*": 0.0},
+    ),
+    soft_joint_pos_limit_factor=0.9,
+    actuators={
+        "legs": ImplicitActuatorCfg(
+            joint_names_expr=[
+                ".*leg_hpz", ".*leg_hpx", ".*leg_hpy",
+                ".*leg_kny", ".*leg_aky", ".*leg_akx",
+                ".*back_bk.*"
+            ],
+            effort_limit_sim={
+                ".*leg_.*": 500.0,
+                ".*back_bk.*": 300.0,
+            },
+            velocity_limit_sim={
+                ".*leg_.*": 12.0,
+                ".*back_bk.*": 9.0,
+            },
+            stiffness={
+                ".*leg_.*": 300.0,
+                ".*back_bk.*": 100.0,
+            },
+            damping={
+                ".*leg_.*": 4.0,
+                ".*back_bk.*": 2.0,
+            },
+        ),
+        "feet": ImplicitActuatorCfg(
+            joint_names_expr=[".*leg_akx"],
+            effort_limit_sim=45.0,
+            velocity_limit_sim=12.0,
+            stiffness=40.0,
+            damping=2.0,
+        ),
+        "arms": ImplicitActuatorCfg(
+            joint_names_expr=[
+                ".*arm_shz", ".*arm_shx", ".*arm_ely",
+                ".*arm_elx", ".*arm_wry", ".*arm_wrx"
+            ],
+            effort_limit_sim={
+                ".*arm_shz": 87.0,
+                ".*arm_shx": 99.0,
+                ".*arm_ely": 63.0,
+                ".*arm_elx": 112.0,
+                ".*arm_wry": 25.0,
+                ".*arm_wrx": 25.0,
+            },
+            velocity_limit_sim={
+                ".*": 12.0
+            },
+            stiffness={
+                ".*arm_shz": 80.0,
+                ".*arm_shx": 80.0,
+                ".*arm_ely": 60.0,
+                ".*arm_elx": 60.0,
+                ".*arm_wry": 50.0,
+                ".*arm_wrx": 50.0,
+            },
+            damping={
+                ".*": 2.0
+            },
+        ),
+        "neck": ImplicitActuatorCfg(
+            joint_names_expr=["neck_ry"],
+            effort_limit_sim=5.0,
+            velocity_limit_sim=6.28,
+            stiffness=10.0,
+            damping=1.0,
+        ),
+    },
+    joint_sdk_names=[
+        "l_leg_hpz", "l_leg_hpx", "l_leg_hpy", "l_leg_kny",
+        "l_leg_aky", "l_leg_akx", "r_leg_hpz", "r_leg_hpx",
+        "r_leg_hpy", "r_leg_kny", "r_leg_aky", "r_leg_akx",
+        "back_bkz", "back_bky", "back_bkx",
+        "l_arm_shz", "l_arm_shx", "l_arm_ely", "l_arm_elx",
+        "l_arm_wry", "l_arm_wrx", "r_arm_shz", "r_arm_shx",
+        "r_arm_ely", "r_arm_elx", "r_arm_wry", "r_arm_wrx",
+        "neck_ry"
+    ],
+)
+
 
 UNITREE_G1_29DOF_CFG = UnitreeArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
