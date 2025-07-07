@@ -62,18 +62,22 @@ class RobotSceneCfg(InteractiveSceneCfg):
         debug_vis=False,
     )
     # robots
-    robot: ArticulationCfg = XHUMANOID_LITE0430_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+    robot: ArticulationCfg = XHUMANOID_LITE0430_CFG.replace(
+        prim_path="{ENV_REGEX_NS}/Robot"
+    )
 
     # sensors
     height_scanner = RayCasterCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/torso_link",
+        prim_path="{ENV_REGEX_NS}/Robot/waist_link",
         offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
         attach_yaw_only=True,
         pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[1.6, 1.0]),
         debug_vis=False,
         mesh_prim_paths=["/World/ground"],
     )
-    contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/.*", history_length=3, track_air_time=True)
+    contact_forces = ContactSensorCfg(
+        prim_path="{ENV_REGEX_NS}/Robot/.*", history_length=3, track_air_time=True
+    )
     # lights
     sky_light = AssetBaseCfg(
         prim_path="/World/skyLight",
@@ -105,7 +109,7 @@ class EventCfg:
         func=mdp.randomize_rigid_body_mass,
         mode="startup",
         params={
-            "asset_cfg": SceneEntityCfg("robot", body_names="torso_link"),
+            "asset_cfg": SceneEntityCfg("robot", body_names="waist_link"),
             "mass_distribution_params": (-1.0, 3.0),
             "operation": "add",
         },
@@ -116,7 +120,7 @@ class EventCfg:
         func=mdp.apply_external_force_torque,
         mode="reset",
         params={
-            "asset_cfg": SceneEntityCfg("robot", body_names="torso_link"),
+            "asset_cfg": SceneEntityCfg("robot", body_names="waist_link"),
             "force_range": (0.0, 0.0),
             "torque_range": (-0.0, 0.0),
         },
@@ -194,11 +198,21 @@ class ObservationsCfg:
         """Observations for policy group."""
 
         # observation terms (order preserved)
-        base_ang_vel = ObsTerm(func=mdp.base_ang_vel, scale=0.2, noise=Unoise(n_min=-0.2, n_max=0.2))
-        projected_gravity = ObsTerm(func=mdp.projected_gravity, noise=Unoise(n_min=-0.05, n_max=0.05))
-        velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
-        joint_pos_rel = ObsTerm(func=mdp.joint_pos_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
-        joint_vel_rel = ObsTerm(func=mdp.joint_vel_rel, scale=0.05, noise=Unoise(n_min=-1.5, n_max=1.5))
+        base_ang_vel = ObsTerm(
+            func=mdp.base_ang_vel, scale=0.2, noise=Unoise(n_min=-0.2, n_max=0.2)
+        )
+        projected_gravity = ObsTerm(
+            func=mdp.projected_gravity, noise=Unoise(n_min=-0.05, n_max=0.05)
+        )
+        velocity_commands = ObsTerm(
+            func=mdp.generated_commands, params={"command_name": "base_velocity"}
+        )
+        joint_pos_rel = ObsTerm(
+            func=mdp.joint_pos_rel, noise=Unoise(n_min=-0.01, n_max=0.01)
+        )
+        joint_vel_rel = ObsTerm(
+            func=mdp.joint_vel_rel, scale=0.05, noise=Unoise(n_min=-1.5, n_max=1.5)
+        )
         last_action = ObsTerm(func=mdp.last_action)
         gait_phase = ObsTerm(func=mdp.gait_phase, params={"period": 0.6})
 
@@ -217,7 +231,9 @@ class ObservationsCfg:
         base_lin_vel = ObsTerm(func=mdp.base_lin_vel)
         base_ang_vel = ObsTerm(func=mdp.base_ang_vel, scale=0.2)
         projected_gravity = ObsTerm(func=mdp.projected_gravity)
-        velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
+        velocity_commands = ObsTerm(
+            func=mdp.generated_commands, params={"command_name": "base_velocity"}
+        )
         joint_pos_rel = ObsTerm(func=mdp.joint_pos_rel)
         joint_vel_rel = ObsTerm(func=mdp.joint_vel_rel, scale=0.05)
         # joint_effort = ObsTerm(func=mdp.joint_effort, scale=0.01)
@@ -246,7 +262,9 @@ class RewardsCfg:
         params={"command_name": "base_velocity", "std": math.sqrt(0.25)},
     )
     track_ang_vel_z = RewTerm(
-        func=mdp.track_ang_vel_z_exp, weight=0.5, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
+        func=mdp.track_ang_vel_z_exp,
+        weight=0.5,
+        params={"command_name": "base_velocity", "std": math.sqrt(0.25)},
     )
 
     alive = RewTerm(func=mdp.is_alive, weight=0.15)
@@ -265,10 +283,10 @@ class RewardsCfg:
             "asset_cfg": SceneEntityCfg(
                 "robot",
                 joint_names=[
-                    ".*_shoulder_pitch.*",
-                    ".*_shoulder_roll.*",
-                    ".*_shoulder_yaw.*",
-                    ".*_elbow.*",
+                    "shoulder_pitch.*_joint",
+                    "shoulder_roll.*_joint",
+                    "shoulder_yaw.*_joint",
+                    "elbow.*_joint",
                 ],
             )
         },
@@ -276,17 +294,23 @@ class RewardsCfg:
     joint_deviation_torso = RewTerm(
         func=mdp.joint_deviation_l1,
         weight=-1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=["torso_joint"])},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=["waist_joint"])},
     )
     joint_deviation_hips = RewTerm(
         func=mdp.joint_deviation_l1,
         weight=-1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_hip_roll_joint", ".*_hip_yaw_joint"])},
+        params={
+            "asset_cfg": SceneEntityCfg(
+                "robot", joint_names=["hip_roll_.*_joint", "hip_yaw_.*_joint"]
+            )
+        },
     )
 
     # -- robot
     flat_orientation_l2 = RewTerm(func=mdp.flat_orientation_l2, weight=-1.0)
-    base_height = RewTerm(func=mdp.base_height_l2, weight=-10, params={"target_height": 0.9})
+    base_height = RewTerm(
+        func=mdp.base_height_l2, weight=-10, params={"target_height": 0.9}
+    )
 
     # -- feet
     gait = RewTerm(
@@ -296,15 +320,15 @@ class RewardsCfg:
             "period": 0.6,
             "offset": [0.0, 0.5],
             "threshold": 0.55,
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*ankle.*"),
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names="ankle_roll.*"),
         },
     )
     feet_slide = RewTerm(
         func=mdp.feet_slide,
         weight=-0.2,
         params={
-            "asset_cfg": SceneEntityCfg("robot", body_names=".*ankle.*"),
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*ankle.*"),
+            "asset_cfg": SceneEntityCfg("robot", body_names="ankle_roll.*"),
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names="ankle_roll.*"),
         },
     )
     feet_clearance = RewTerm(
@@ -314,7 +338,7 @@ class RewardsCfg:
             "std": 0.05,
             "tanh_mult": 2.0,
             "target_height": 0.15,
-            "asset_cfg": SceneEntityCfg("robot", body_names=".*ankle.*"),
+            "asset_cfg": SceneEntityCfg("robot", body_names="ankle_roll.*"),
         },
     )
     feet_contact_forces = RewTerm(
@@ -322,7 +346,7 @@ class RewardsCfg:
         weight=-0.0002,
         params={
             "threshold": 500,
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*ankle.*"),
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names="ankle_roll.*"),
         },
     )
 
@@ -332,7 +356,9 @@ class RewardsCfg:
         weight=-1,
         params={
             "threshold": 1,
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=["(?!.*ankle.*).*"]),
+            "sensor_cfg": SceneEntityCfg(
+                "contact_forces", body_names=["(?!ankle_roll.*).*"]
+            ),
         },
     )
 
@@ -342,14 +368,16 @@ class TerminationsCfg:
     """Termination terms for the MDP."""
 
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
-    base_height = DoneTerm(func=mdp.root_height_below_minimum, params={"minimum_height": 0.3})
+    base_height = DoneTerm(
+        func=mdp.root_height_below_minimum, params={"minimum_height": 0.3}
+    )
     base_contact = DoneTerm(
         func=mdp.illegal_contact,
         params={
             "sensor_cfg": SceneEntityCfg(
                 "contact_forces",
                 body_names=[
-                    "torso_link",
+                    "waist_link",
                 ],
             ),
             "threshold": 1.0,
